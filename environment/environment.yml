@@ -1,0 +1,14 @@
+name: synthesis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip=24.0
+  - pip:
+    - numpy==2.2.6
+    - scipy==1.15.3
+    - pandas==2.3.0
+    - matplotlib==3.10.3
+    - scikit-learn==1.7.0
+
