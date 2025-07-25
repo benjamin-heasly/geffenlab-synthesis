@@ -24,3 +24,8 @@ RUN /opt/miniconda/bin/conda env create -f /opt/environment/environment.yml
 COPY code /opt/code
 RUN mv /opt/code/population-analysis /opt/code/population_analysis
 COPY code/conda_run /usr/local/bin/conda_run
+
+# Give Matplotlib a writeable, user-independent cache directory.
+# https://matplotlib.org/stable/install/environment_variables_faq.html
+ENV MPLCONFIGDIR=/tmp/matplotlib
+RUN mkdir $MPLCONFIGDIR && chmod a+w $MPLCONFIGDIR
