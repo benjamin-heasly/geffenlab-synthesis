@@ -178,25 +178,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "--params-py-pattern", "-P",
         type=str,
         help="Glob pattern to locate Phy params.py within the session analysis subdir: ANALYSIS_ROOT/SUBJECT_ID/SESSION_DATE. (default: %(default)s)",
-        default="exported/phy/**/params.py"
+        default="exported/phy/*/params.py"
     )
     parser.add_argument(
         "--cluster-info-pattern", "-C",
         type=str,
         help="Glob pattern to locate Phy cluster_info.csv within the session analysis subdir: ANALYSIS_ROOT/SUBJECT_ID/SESSION_DATE. (default: %(default)s)",
-        default="curated/**/cluster_info.tsv"
+        default="curated/*/cluster_info.tsv"
     )
     parser.add_argument(
         "--spike-times-sec-adj-pattern", "-S",
         type=str,
         help="Glob pattern to locate TPrime spike_times_sec_adj.npy within the session analysis subdir: ANALYSIS_ROOT/SUBJECT_ID/SESSION_DATE. (default: %(default)s)",
-        default="exported/tprime/**/spike_times_sec_adj.npy"
+        default="exported/tprime/*/spike_times_sec_adj.npy"
     )
     parser.add_argument(
         "--event-times-pattern", "-E",
         type=str,
         help="Glob pattern to locate a trial events times text file within the session analysis subdir: ANALYSIS_ROOT/SUBJECT_ID/SESSION_DATE. (default: %(default)s)",
-        default="exported/tprime/**/*nidq.xd_8_3_0.txt"
+        default="exported/tprime/*/*nidq.xd_8_3_0.txt"
     )
     parser.add_argument(
         "--behavior-txt-pattern", "-T",

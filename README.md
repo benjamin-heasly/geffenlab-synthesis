@@ -24,5 +24,5 @@ DATE=03112025
 DATA_PATH="$DATA_ROOT/$SUBJECT/$DATE"
 ANALYSIS_PATH="$ANALYSIS_ROOT/$SUBJECT/$DATE"
 
-docker run -ti --rm -u $(id -u):$(id -g) -v $DATA_PATH:$DATA_PATH -v $ANALYSIS_PATH:$ANALYSIS_PATH geffenlab/synthesis:local /opt/code/conda_run python /opt/code/run.py --data-path=$DATA_PATH --analysis-path=$ANALYSIS_PATH --results-path=$ANALYSIS_PATH/synthesis --session-info='{"foo": "bar"}'
+docker run -ti --rm -u $(id -u):$(id -g) -v $DATA_PATH:$DATA_PATH -v $ANALYSIS_PATH:$ANALYSIS_PATH geffenlab/synthesis:local /opt/code/conda_run python /opt/code/run.py --data-path=$DATA_PATH --analysis-path=$ANALYSIS_PATH --results-path=$ANALYSIS_PATH/synthesis
 ```
