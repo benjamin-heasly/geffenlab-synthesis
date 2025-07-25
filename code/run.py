@@ -3,6 +3,8 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from typing import Optional, Sequence
 import logging
 from pathlib import Path
+import json
+import pickle
 
 import numpy as np
 
@@ -20,6 +22,7 @@ def set_up_logging():
 
 def run_main(
     title: str,
+    session_info: str,
     data_path: Path,
     analysis_path: Path,
     results_path: Path,
@@ -43,7 +46,7 @@ def run_main(
         event_times_pattern
     )
 
-    # Load the lab standard dataframes from local files.
+    # Load the lab dataframes from local files.
     trial_events, spikes_df, cluster_info, kept_clusters, nb_times = lf.gen_dataframe_local(
         data_path,
         neuronal_path,
@@ -51,6 +54,42 @@ def run_main(
         behavior_txt_pattern,
         behavior_mat_pattern
     )
+
+    # Load optional session info from JSON.
+    info = {}
+    if session_info is not None:
+        session_info_path = Path(session_info)
+        if session_info_path.exists():
+            logging.info(f"Loading session info from {session_info_path}.")
+            with open(session_info_path, 'r') as f:
+                info = json.load(f)
+        else:
+            logging.info(f"Loading session info from string {session_info}.")
+            info = json.loads(session_info)
+
+    # Save the synthesized session data to .pkl.
+    results_path.mkdir(parents=True, exist_ok=True)
+    pkl_path = Path(results_path, f"{title}.pkl")
+    logging.info("Saving data to .pkl.\n")
+    all_clusters = np.unique(spikes_df['cluster'])
+    stim_edges = np.arange(-0.5, 1.0, 0.02)
+    stim_tensor = hf.gen_tensor(stim_edges, all_clusters, trial_events['stim_time'], spikes_df)
+    resp_edges = np.arange(-1.0, 1.0, 0.02)
+    resp_tensor = hf.gen_tensor(resp_edges, all_clusters, trial_events['resp_time'], spikes_df)
+    df_dict = {
+        "session_info": info,
+        "trial_events": trial_events,
+        "spikes_df": spikes_df,
+        "cluster_info": cluster_info,
+        "stim_tensor": stim_tensor,
+        "stim_edges": stim_edges,
+        "resp_tensor": resp_tensor,
+        "resp_edges": resp_edges,
+    }
+    with open(pkl_path, 'wb') as f:
+        pickle.dump(df_dict, f)
+
+    logging.info("Creating summary plots.\n")
 
     # Sort units according to d-prime.
     if probe_stims is None:
@@ -73,18 +112,16 @@ def run_main(
     logging.info(f"Sorted units by d-prime: {sorted_ids}")
 
     # Generate session summary plots.
-    results_path.mkdir(parents=True, exist_ok=True)
+    figures_path = Path(results_path, "figures")
+    figures_path.mkdir(parents=True, exist_ok=True)
     hf.batch_plot(
         title,
         sorted_ids,
         spikes_df,
         trial_events,
         plot_fn=hf.complex_condition_plot,
-        save_dir=results_path.as_posix()
+        save_dir=figures_path.as_posix()
     )
-
-    # TODO: save a .pkl with dataframes.
-    # see population-analysis/guide_make_session_pickle.ipynb
 
     logging.info("OK\n")
 
@@ -117,6 +154,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         type=str,
         help="Title to use for summary figures. (default: %(default)s)",
         default="Multiplot!"
+    )
+    parser.add_argument(
+        "--session-info", "-s",
+        type=str,
+        help="JSON string or file name with top-level session info to include. (default: %(default)s)",
+        default=None
     )
     parser.add_argument(
         "--interneuron-search", "-I",
@@ -175,6 +218,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         run_main(
             cli_args.title,
+            cli_args.session_info,
             data_path,
             analysis_path,
             results_path,
