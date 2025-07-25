@@ -23,19 +23,33 @@ def run_main(
     data_path: Path,
     analysis_path: Path,
     results_path: Path,
-    probe_stims: list[float]
+    interneuron_search: bool,
+    probe_stims: list[float],
+    params_py_pattern: str,
+    cluster_info_pattern: str,
+    spike_times_sec_adj_pattern: str,
+    event_times_pattern: str,
+    behavior_txt_pattern: str,
+    behavior_mat_pattern: str,
 ):
-    # TODO: get several options from CLI args and pass to load functions.
-
     logging.info("Synthesizing neural and behavioral data.\n")
 
     # Combine data from a few pipeline steps into one "neuronal location".
-    neuronal_path = lf.combine_neural_data(analysis_path)
+    neuronal_path = lf.combine_neural_data(
+        analysis_path,
+        params_py_pattern,
+        cluster_info_pattern,
+        spike_times_sec_adj_pattern,
+        event_times_pattern
+    )
 
     # Load the lab standard dataframes from local files.
     trial_events, spikes_df, cluster_info, kept_clusters, nb_times = lf.gen_dataframe_local(
         data_path,
-        neuronal_path
+        neuronal_path,
+        interneuron_search,
+        behavior_txt_pattern,
+        behavior_mat_pattern
     )
 
     # Sort units according to d-prime.
@@ -114,7 +128,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "--probe-stims", "-p",
         type=float,
         nargs="*",
-        help="List of trial stim values to treat as probe stims.  Default is to take the top 6 out of 12 (assumed) stim values.",
+        help="List of trial stim values to treat as probe stims.  Default is to take any stim values > 14.0.",
         default=[]
     )
     parser.add_argument(
@@ -164,7 +178,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             data_path,
             analysis_path,
             results_path,
-            cli_args.probe_stims
+            cli_args.interneuron_search,
+            cli_args.probe_stims,
+            cli_args.params_py_pattern,
+            cli_args.cluster_info_pattern,
+            cli_args.spike_times_sec_adj_pattern,
+            cli_args.event_times_pattern,
+            cli_args.behavior_txt_pattern,
+            cli_args.behavior_mat_pattern,
         )
     except:
         logging.error("Error synthesizing session data.", exc_info=True)
