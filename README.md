@@ -16,7 +16,7 @@ This repo is configured to automatically build and publish a new Docker image ve
 
 ## Published versions
 
-The published images are located in the GitHub Container Registry as [geffenlab-synthesis](https://github.com/benjamin-heasly/geffenlab-synthesis/pkgs/container/geffenlab-synthesis).  You can find the latest public version at this page.
+The published images are located in the GitHub Container Registry as [geffenlab-synthesis](https://github.com/benjamin-heasly/geffenlab-synthesis/pkgs/container/geffenlab-synthesis).  You can find the latest published version at this page.
 
 You can access published images using their full names.  For version `v0.0.4` the full name would be `ghcr.io/benjamin-heasly/geffenlab-synthesis:v0.0.4`.  You can use this name in [Nexflow pipeline configuration](https://github.com/benjamin-heasly/geffenlab-ephys-pipeline/blob/master/pipeline/main.nf#L128) and with Docker commands like:
 
@@ -36,7 +36,7 @@ git commit -a -m "Now with lasers!"
 git push
 ```
 
-next, Create a new repository [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), which marks the most recent commit as important, giving it a unique name and description.
+Next, Create a new repository [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), which marks the most recent commit as important, giving it a unique name and description.
 
 ```
 # Review existing tags and choose the next version number to use.
