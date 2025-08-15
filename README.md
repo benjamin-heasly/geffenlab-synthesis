@@ -36,7 +36,7 @@ git commit -a -m "Now with lasers!"
 git push
 ```
 
-Next, Create a new repository [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), which marks the most recent commit as important, giving it a unique name and description.
+Next, create a new repository [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), which marks the most recent commit as important, giving it a unique name and description.
 
 ```
 # Review existing tags and choose the next version number to use.
