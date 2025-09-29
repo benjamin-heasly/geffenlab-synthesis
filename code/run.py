@@ -1,4 +1,5 @@
 import sys
+from importlib import import_module
 from argparse import ArgumentParser, BooleanOptionalAction
 from typing import Optional, Sequence
 import logging
@@ -21,21 +22,25 @@ def set_up_logging():
 
 
 def run_main(
-    title: str,
+    subject: str,
+    date: str,
     session_info: str,
     data_path: Path,
     analysis_path: Path,
     results_path: Path,
     interneuron_search: bool,
-    probe_stims: list[float],
     params_py_pattern: str,
     cluster_info_pattern: str,
     spike_times_sec_adj_pattern: str,
     event_times_pattern: str,
     behavior_txt_pattern: str,
     behavior_mat_pattern: str,
+    stim_edges: list[float],
+    resp_edges: list[float],
+    pickle_name: str,
+    plotting_scripts: list[str]
 ):
-    logging.info("Synthesizing neural and behavioral data.\n")
+    logging.info(f"Synthesizing neural and behavioral data for {subject} {date}.\n")
 
     # Combine data from a few pipeline steps into one "neuronal location".
     neuronal_path = lf.combine_neural_data(
@@ -69,18 +74,22 @@ def run_main(
 
     # Save the synthesized session data to .pkl.
     results_path.mkdir(parents=True, exist_ok=True)
-    pkl_path = Path(results_path, f"{title}.pkl")
-    logging.info("Saving data to .pkl.\n")
+    pkl_path = Path(results_path, "summary.pkl")
+    logging.info(f"Saving summary data to {pkl_path}\n")
     all_clusters = np.unique(spikes_df['cluster'])
-    stim_edges = np.arange(-0.5, 1.0, 0.02)
-    stim_tensor = hf.gen_tensor(stim_edges, all_clusters, trial_events['stim_time'], spikes_df)
-    resp_edges = np.arange(-1.0, 1.0, 0.02)
-    resp_tensor = hf.gen_tensor(resp_edges, all_clusters, trial_events['resp_time'], spikes_df)
+    stim_edges_array = np.arange(stim_edges[0], stim_edges[1], stim_edges[2])
+    stim_tensor = hf.gen_tensor(stim_edges_array, all_clusters, trial_events['stim_time'], spikes_df)
+    resp_edges_array = np.arange(resp_edges[0], resp_edges[1], resp_edges[2])
+    resp_tensor = hf.gen_tensor(resp_edges_array, all_clusters, trial_events['resp_time'], spikes_df)
     df_dict = {
+        "subject": subject,
+        "date": date,
         "session_info": info,
         "trial_events": trial_events,
         "spikes_df": spikes_df,
         "cluster_info": cluster_info,
+        "kept_clusters": kept_clusters,
+        "nb_times": nb_times,
         "stim_tensor": stim_tensor,
         "stim_edges": stim_edges,
         "resp_tensor": resp_tensor,
@@ -90,38 +99,13 @@ def run_main(
         pickle.dump(df_dict, f)
 
     logging.info("Creating summary plots.\n")
-
-    # Sort units according to d-prime.
-    if probe_stims is None:
-        unique_stims = np.unique(trial_events['stim'])
-        probe_stims = unique_stims[unique_stims > 14.0]
-    effect_df, pcnt_stim, pcnt_cat = hf.make_effect_df(
-        kept_clusters,
-        trial_events['stim_time'],
-        spikes_df,
-        trial_events,
-        probe_stims=probe_stims
-    )
-    values = np.abs(effect_df['onset_categorical_d']).values
-    ids = kept_clusters
-    valid_mask = ~np.isnan(values)
-    valid_ids = ids[valid_mask]
-    valid_values = values[valid_mask]
-    sorted_ids = valid_ids[np.argsort(valid_values)[::-1]]
-
-    logging.info(f"Sorted units by d-prime: {sorted_ids}")
-
-    # Generate session summary plots.
-    figures_path = Path(results_path, "figures")
-    figures_path.mkdir(parents=True, exist_ok=True)
-    hf.batch_plot(
-        title,
-        sorted_ids,
-        spikes_df,
-        trial_events,
-        plot_fn=hf.complex_condition_plot,
-        save_dir=figures_path.as_posix()
-    )
+    for plotting_script in plotting_scripts:
+        script_name = plotting_script.strip()
+        logging.info(f"Plotting {script_name}")
+        module_spec = f"plotting_scripts.{script_name}"
+        module = import_module(module_spec)
+        plot_function = getattr(module, 'plot')
+        plot_function()
 
     logging.info("OK\n")
 
@@ -150,13 +134,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default="/results"
     )
     parser.add_argument(
-        "--title", "-t",
+        "--subject", "-s",
         type=str,
-        help="Title to use for summary figures. (default: %(default)s)",
-        default="Multiplot!"
+        help="Subject ID for the session being processed. (default: %(default)s)",
+        default="AS20-minimal2"
     )
     parser.add_argument(
-        "--session-info", "-s",
+        "--date", "-d",
+        type=str,
+        help="MMDDYYY date for the session being processed. (default: %(default)s)",
+        default="03112025"
+    )
+    parser.add_argument(
+        "--session-info", "-i",
         type=str,
         help="JSON string or file name with top-level session info to include. (default: %(default)s)",
         default=None
@@ -166,13 +156,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         action=BooleanOptionalAction,
         help="True or False, whether to analyze waveforms and identify interneurons. (default: %(default)s)",
         default=True
-    )
-    parser.add_argument(
-        "--probe-stims", "-p",
-        type=float,
-        nargs="*",
-        help="List of trial stim values to treat as probe stims.  Default is to take any stim values > 14.0.",
-        default=[]
     )
     parser.add_argument(
         "--params-py-pattern", "-P",
@@ -210,6 +193,26 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         help="Glob pattern to locate a behavior mat-file session data subdir: DATA_ROOT/SUBJECT_ID/SESSION_DATE. (default: %(default)s)",
         default="behavior/*.mat"
     )
+    parser.add_argument(
+        "--stim-edges",
+        type=float,
+        nargs="+",
+        help="List of bin edge [low, high, step] for creating stim_tensor. (default: %(default)s)",
+        default=[-0.5, 1.0, 0.02]
+    )
+    parser.add_argument(
+        "--pickle-name",
+        type=str,
+        help="File name for the summary .pkl file to create. (default: %(default)s)",
+        default="summary.pkl"
+    )
+    parser.add_argument(
+        "--plotting_scripts",
+        type=str,
+        nargs="+",
+        help="Names of plotting scripts to run at the end (found in plotting_scripts/ subdir, without .py at the end). (default: %(default)s)",
+        default=["complex_condition"]
+    )
 
     cli_args = parser.parse_args(argv)
     data_path = Path(cli_args.data_path)
@@ -217,19 +220,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     results_path = Path(cli_args.results_path)
     try:
         run_main(
-            cli_args.title,
+            cli_args.subject,
+            cli_args.date,
             cli_args.session_info,
             data_path,
             analysis_path,
             results_path,
             cli_args.interneuron_search,
-            cli_args.probe_stims,
             cli_args.params_py_pattern,
             cli_args.cluster_info_pattern,
             cli_args.spike_times_sec_adj_pattern,
             cli_args.event_times_pattern,
             cli_args.behavior_txt_pattern,
             cli_args.behavior_mat_pattern,
+            cli_args.stim_edges,
+            cli_args.resp_edges,
+            cli_args.pickle_name,
+            cli_args.plotting_scripts
         )
     except:
         logging.error("Error synthesizing session data.", exc_info=True)
