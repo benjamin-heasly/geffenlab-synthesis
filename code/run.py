@@ -211,7 +211,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         type=str,
         nargs="+",
         help="Names of plotting scripts to run at the end (found in plotting_scripts/ subdir, without .py at the end). (default: %(default)s)",
-        default=["complex_condition"]
+        default=["complex_condition demo"]
     )
 
     cli_args = parser.parse_args(argv)
