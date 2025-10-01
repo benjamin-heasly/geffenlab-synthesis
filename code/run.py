@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 import json
 import pickle
+from contextlib import chdir
 
 import numpy as np
 
@@ -105,7 +106,11 @@ def run_main(
         module_spec = f"plotting_scripts.{script_name}"
         module = import_module(module_spec)
         plot_function = getattr(module, 'plot')
-        plot_function()
+
+        # Run the plotting script from the results dir with summary.pkl.
+        with chdir(results_path):
+            logging.info(f"Running from {results_path}")
+            plot_function()
 
     logging.info("OK\n")
 
