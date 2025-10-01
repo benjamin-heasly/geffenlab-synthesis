@@ -74,7 +74,7 @@ def run_main(
 
     # Save the synthesized session data to .pkl.
     results_path.mkdir(parents=True, exist_ok=True)
-    pkl_path = Path(results_path, "summary.pkl")
+    pkl_path = Path(results_path, pickle_name)
     logging.info(f"Saving summary data to {pkl_path}\n")
     all_clusters = np.unique(spikes_df['cluster'])
     stim_edges_array = np.arange(stim_edges[0], stim_edges[1], stim_edges[2])
@@ -199,6 +199,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         nargs="+",
         help="List of bin edge [low, high, step] for creating stim_tensor. (default: %(default)s)",
         default=[-0.5, 1.0, 0.02]
+    )
+    parser.add_argument(
+        "--resp-edges",
+        type=float,
+        nargs="+",
+        help="List of bin edge [low, high, step] for creating resp_tensor. (default: %(default)s)",
+        default=[-1.0, 1.0, 0.02]
     )
     parser.add_argument(
         "--pickle-name",
