@@ -1,0 +1,4 @@
+[project]
+name = "population_analysis"
+version = "0.0.0"
+description = "Geffen lab utilities for aligning and plotting behavior and ephys data."

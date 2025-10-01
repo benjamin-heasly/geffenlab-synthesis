@@ -18,6 +18,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py311_24.5.0-0-Linux-x86
 
 # Create our conda environment from environment.yml.
 COPY environment/environment.yml /opt/environment/environment.yml
+COPY environment/pyproject.toml /opt/environment/pyproject.toml
 COPY environment/population_analysis /opt/environment/population_analysis
 WORKDIR /opt/environment
 RUN /opt/miniconda/bin/conda env create -f /opt/environment/environment.yml
