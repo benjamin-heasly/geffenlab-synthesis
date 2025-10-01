@@ -101,16 +101,21 @@ def run_main(
 
     logging.info("Creating summary plots.\n")
     for plotting_script in plotting_scripts:
-        script_name = plotting_script.strip()
-        logging.info(f"Plotting {script_name}")
-        module_spec = f"plotting_scripts.{script_name}"
-        module = import_module(module_spec)
-        plot_function = getattr(module, 'plot')
+        try:
+            # Load the plotting script by name and get its plot() function.
+            script_name = plotting_script.strip()
+            logging.info(f"Plotting {script_name}")
+            module_spec = f"plotting_scripts.{script_name}"
+            module = import_module(module_spec)
+            plot_function = getattr(module, 'plot')
 
-        # Run the plotting script from the results dir with summary.pkl.
-        with chdir(results_path):
-            logging.info(f"Running from {results_path}")
-            plot_function()
+            # Run the plot() function from the results dir that has summary.pkl.
+            with chdir(results_path):
+                logging.info(f"Running from {results_path}")
+                plot_function()
+
+        except Exception:
+            logging.error(f"Error running plotting script {plotting_script}", exc_info=True)
 
     logging.info("OK\n")
 
