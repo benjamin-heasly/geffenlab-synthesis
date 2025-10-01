@@ -116,19 +116,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = ArgumentParser(description="Synthesize neural and behavioral data, produce summary plots.")
 
     parser.add_argument(
-        "--data-path", "-d",
+        "--data-path", "-D",
         type=str,
         help="Where to find and read input data files for a session. (default: %(default)s)",
         default="/data"
     )
     parser.add_argument(
-        "--analysis-path", "-a",
+        "--analysis-path", "-A",
         type=str,
         help="Where to find and read input analysis products for a session. (default: %(default)s)",
         default="/analysis"
     )
     parser.add_argument(
-        "--results-path", "-r",
+        "--results-path", "-R",
         type=str,
         help="Where to write output result files. (default: %(default)s)",
         default="/results"
