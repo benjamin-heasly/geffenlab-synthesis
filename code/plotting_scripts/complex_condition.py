@@ -42,9 +42,12 @@ def plot():
     """
 
     # Expect to run from the analysis subdirectory for the current session.
-    # Expect "summary.pkl" in this directory.
-    pkl_path = Path("summary.pkl")
-    logging.info(f"Loading data: {pkl_path}")
+    # Expect a .pkl file like "*summary.pkl" in this directory.
+    summary_pattern = "*summary.pkl"
+    summary_paths = Path(".").glob("*summary.pkl")
+    logging.info(f"Found summary pickels: {summary_paths}")
+    pkl_path = list(summary_paths)[0]
+    logging.info(f"Loading summary pickel: {pkl_path}")
     with open(pkl_path, 'rb') as f:
         df_dict = pickle.load(f)
 
@@ -92,3 +95,8 @@ def plot():
     )
 
     logging.info(f"Saved complex_condition_plot(s)")
+
+
+if __name__ == "__main__":
+    logging.basicConfig()
+    plot()

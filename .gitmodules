@@ -1,3 +1,3 @@
 [submodule "code/population-analysis"]
-	path = code/population-analysis
+	path = population_analysis
 	url = https://github.com/jcollina/population-analysis.git
