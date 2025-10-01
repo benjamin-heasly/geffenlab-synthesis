@@ -42,7 +42,7 @@ def plot():
     # Expect "summary.pkl" in this directory.
     pkl_path = Path("summary.pkl")
     logging.info(f"Loading data: {pkl_path}")
-    with open(pkl_path, 'r') as f:
+    with open(pkl_path, 'rb') as f:
         df_dict = pickle.load(f)
 
     # Write figures into a "figures" subdirectory.
@@ -50,13 +50,14 @@ def plot():
     figures_path.mkdir(exist_ok=True, parents=True)
 
     # Unpack data we need from the pickled dictionary.
-    subject = df_dict["subject"]
-    date = df_dict["date"]
     trial_events = df_dict["trial_events"]
-    kept_clusters = df_dict["kept_clusters"]
     spikes_df = df_dict["spikes_df"]
 
     logging.info(f"Saving demo plots")
 
 
     logging.info(f"Saved demo plots")
+
+
+if __name__ == "__main__":
+    plot()

@@ -45,7 +45,7 @@ def plot():
     # Expect "summary.pkl" in this directory.
     pkl_path = Path("summary.pkl")
     logging.info(f"Loading data: {pkl_path}")
-    with open(pkl_path, 'r') as f:
+    with open(pkl_path, 'rb') as f:
         df_dict = pickle.load(f)
 
     # Write figures into a "figures" subdirectory.
