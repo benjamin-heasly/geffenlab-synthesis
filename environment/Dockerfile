@@ -18,11 +18,12 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py311_24.5.0-0-Linux-x86
 
 # Create our conda environment from environment.yml.
 COPY environment/environment.yml /opt/environment/environment.yml
+COPY environment/population_analysis /opt/environment/population_analysis
+WORKDIR /opt/environment
 RUN /opt/miniconda/bin/conda env create -f /opt/environment/environment.yml
 
 # Include all of our code/* in /opt/code
 COPY code /opt/code
-RUN mv /opt/code/population-analysis /opt/code/population_analysis
 COPY code/conda_run /usr/local/bin/conda_run
 
 # Give Matplotlib a writeable, user-independent cache directory.

@@ -11,3 +11,4 @@ dependencies:
     - pandas==2.3.0
     - matplotlib==3.10.3
     - scikit-learn==1.7.0
+    - ./population_analysis # install lab's own population_analysis from local dir
