@@ -75,7 +75,7 @@ def run_main(
 
     # Save the synthesized session data to .pkl.
     results_path.mkdir(parents=True, exist_ok=True)
-    pkl_path = Path(results_path, pickle_name)
+    pkl_path = Path(results_path, f"{subject}_{date}_{pickle_name}")
     logging.info(f"Saving summary data to {pkl_path}\n")
     all_clusters = np.unique(spikes_df['cluster'])
     stim_edges_array = np.arange(stim_edges[0], stim_edges[1], stim_edges[2])

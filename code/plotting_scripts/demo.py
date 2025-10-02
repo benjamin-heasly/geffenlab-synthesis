@@ -2,64 +2,89 @@ import logging
 import pickle
 from pathlib import Path
 
+from matplotlib import pyplot as plt
+
 
 def plot():
-    """Plot summary figures for a session, at the end of pipeline processing.
+    """Demonstrate how to write a plotting script that fits within pipeline runs.
 
-    Our Geffen lab ephys pipeline will process and summarize data as a Python .pkl, then call scripts like this one to create summary plots.
-    The goal is to standardize the .pkl with summary data across the lab so the pipeline code will do this part.
+    You can copy and modify this script to create your own plotting scripts.
 
-    But we might want different summary plots, depending on the experiment.
-    We can add different plotting functions in the plotting_scripts/ directory of this repo.
+    For more about how to relase a plotting script and configure it into pipeline runs, see:
+        https://github.com/benjamin-heasly/geffenlab-ephys-pipeline/blob/master/summary-plotting-scripts.md
 
-    At the end of processing the pipeline will call one or more of these plotting_scripts.
-    Which plotting scripts to call can be configured along with other
-    [pipeline configuration](https://github.com/benjamin-heasly/geffenlab-ephys-pipeline/blob/master/pipeline-configurations.md)
+    Plotting scripts all must have the same overall shape.  They must:
 
-    All of the plotting scripts should have the same "shape" so that the pipeline can call them interchangeably:
+        - Have a plot() function like this one, that works with no arguments.
+        - Expect a session data pickle in the current directory, with a name ending like "summary.pkl".
+        - Save figures into a subdirectory called "figures/".
 
-        - The plotting script should define a plot() function, like this one.
-        - The plot() function should work without any arguments passed to it.
-        - The plot() function should expect to run in the "analysis" subdir of the session being processed.
-        - The pipeline will set this as the working directory before calling plot().
-        - The plot() function should look for a file named "summary.pkl" in the current directory.
-        - Everything the plot() funciton needs should be found within "summary.pkl".
-        - The plot() function should write figures into the "figures" subdirectory of the current directory.
+    The "summary.pkl" for the current session will contain a dictionary with items like:
 
-    The "summary.pkl" for the current session will contain the following items:
-
-        - subject: str subject id
-        - date: str session date MMDDYYYY
-        - session_info: dict of additional session metadata, optional
-        - trial_events: dataframe of trial behavioral events
-        - spikes_df: dataframe of sorted spikes
-        - cluster_info: dataframe of sorted cluster labels and quality metrics
-        - stim_tensor: ND array of cluster and spike data, arranged around stimulus time
-        - resp_tensor: ND array of cluster and spike data, arranged around response time
+        - "subject": str subject id
+        - "date": str session date MMDDYYYY
+        - "trial_events": dataframe of trial behavioral events
+        - "spikes_df": dataframe of sorted spikes
+        - "cluster_info": dataframe of sorted cluster labels and quality metrics
+        - "stim_tensor": ND array of cluster and spike data, arranged around stimulus time
+        - "resp_tensor": ND array of cluster and spike data, arranged around response time
     """
 
     # Expect to run from the analysis subdirectory for the current session.
-    # Expect "summary.pkl" in this directory.
-    pkl_path = Path("summary.pkl")
-    logging.info(f"Loading data: {pkl_path}")
+    # Find and load a "*summary.pkl" in this directory.
+    summary_paths = list(Path(".").glob("*summary.pkl"))
+    logging.info(f"Found summary pickle: {summary_paths}")
+    pkl_path = summary_paths[0]
+    logging.info(f"Loading summary pickle: {pkl_path}")
     with open(pkl_path, 'rb') as f:
-        df_dict = pickle.load(f)
+        summary_dict = pickle.load(f)
 
-    # Write figures into a "figures" subdirectory.
+    # Write figures into a "/" subdirectory.
     figures_path = Path("figures")
     figures_path.mkdir(exist_ok=True, parents=True)
 
-    # Unpack data we need from the pickled dictionary.
-    trial_events = df_dict["trial_events"]
-    spikes_df = df_dict["spikes_df"]
+    # Unpack data we need from the summary dictionary.
+    subject = summary_dict["subject"]
+    date = summary_dict["date"]
+    trial_events = summary_dict["trial_events"]
+    spikes_df = summary_dict["spikes_df"]
 
-    logging.info(f"Saving demo plots")
+    # Choose an arbitrary time range to detail.
+    detail_seconds = 10
 
+    # Plot with matplotlib.
+    fig, ax = plt.subplots(nrows=2, figsize=(15, 10))
 
-    logging.info(f"Saved demo plots")
+    # Plot stim events with time and stim value.
+    stim_selector = trial_events['stim_time'] <= detail_seconds
+    ax[0].scatter(trial_events['stim_time'][stim_selector], trial_events['stim'][stim_selector])
+    ax[0].set_title(f"{subject}_{date}_demo (first {detail_seconds}s)")
+    ax[0].set_ylabel("stim")
+    unique_stims = list(set(trial_events['stim'][stim_selector]))
+    unique_stims.sort()
+    ax[0].set_yticks(unique_stims)
+    ax[0].grid()
+    ax[0].set_xlim((0, detail_seconds))
+
+    # Plot spike events with time and cluster id.
+    spike_selector = spikes_df['time'] < detail_seconds
+    ax[1].scatter(spikes_df['time'][spike_selector], spikes_df['cluster'][spike_selector], marker='|')
+    ax[1].set_ylabel("cluster")
+    ax[1].set_xlabel(f"aligned time (s)")
+    unique_clusters = list(set(spikes_df['cluster'][spike_selector]))
+    unique_clusters.sort()
+    ax[1].set_yticks(unique_clusters)
+    ax[1].grid()
+    ax[1].set_xlim((0, detail_seconds))
+
+    # Save the figure as a .png.
+    png_path = Path(figures_path, f"{subject}-{date}_demo.png")
+    fig.savefig(png_path)
+    logging.info(f"Saved plot to {png_path}")
 
 
 if __name__ == "__main__":
+    # For testing locally, enable console logging and call plot() with no args.
     import sys
     logging.basicConfig(
         stream=sys.stdout,
