@@ -46,7 +46,7 @@ def run_main(
 
     # Combine data from a few pipeline steps into one "neuronal location".
     neuronal_path = lf.combine_neural_data(
-        analysis_path,
+        processed_data_path,
         params_py_pattern,
         cluster_info_pattern,
         spike_times_sec_adj_pattern,
@@ -55,7 +55,7 @@ def run_main(
 
     # Load the lab dataframes from local files.
     trial_events, spikes_df, cluster_info, kept_clusters, nb_times = lf.gen_dataframe_local(
-        data_path,
+        raw_data_path,
         neuronal_path,
         interneuron_search,
         behavior_txt_pattern,
