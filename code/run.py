@@ -23,11 +23,12 @@ def set_up_logging():
 
 
 def run_main(
+    experimenter: str,
     subject: str,
     date: str,
     session_info: str,
-    data_path: Path,
-    analysis_path: Path,
+    raw_data_path: Path,
+    processed_data_path: Path,
     results_path: Path,
     interneuron_search: bool,
     params_py_pattern: str,
@@ -41,7 +42,7 @@ def run_main(
     pickle_name: str,
     plotting_scripts: list[str]
 ):
-    logging.info(f"Synthesizing neural and behavioral data for {subject} {date}.\n")
+    logging.info(f"Synthesizing neural and behavioral data for {experimenter} {subject} {date}.\n")
 
     # Combine data from a few pipeline steps into one "neuronal location".
     neuronal_path = lf.combine_neural_data(
@@ -75,7 +76,7 @@ def run_main(
 
     # Save the synthesized session data to .pkl.
     results_path.mkdir(parents=True, exist_ok=True)
-    pkl_path = Path(results_path, f"{subject}_{date}_{pickle_name}")
+    pkl_path = Path(results_path, f"{experimenter}_{subject}_{date}_{pickle_name}")
     logging.info(f"Saving summary data to {pkl_path}\n")
     all_clusters = np.unique(spikes_df['cluster'])
     stim_edges_array = np.arange(stim_edges[0], stim_edges[1], stim_edges[2])
@@ -83,6 +84,7 @@ def run_main(
     resp_edges_array = np.arange(resp_edges[0], resp_edges[1], resp_edges[2])
     resp_tensor = hf.gen_tensor(resp_edges_array, all_clusters, trial_events['resp_time'], spikes_df)
     df_dict = {
+        "experimenter": experimenter,
         "subject": subject,
         "date": date,
         "session_info": info,
@@ -126,22 +128,28 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = ArgumentParser(description="Synthesize neural and behavioral data, produce summary plots.")
 
     parser.add_argument(
-        "--data-path", "-D",
+        "--raw-data-path", "-D",
         type=str,
-        help="Where to find and read input data files for a session. (default: %(default)s)",
-        default="/data"
+        help="Where to find and read raw data files for the session. (default: %(default)s)",
+        default="/raw_data"
     )
     parser.add_argument(
-        "--analysis-path", "-A",
+        "--processed-data-path", "-P",
         type=str,
-        help="Where to find and read input analysis products for a session. (default: %(default)s)",
-        default="/analysis"
+        help="Where to find and read processed data files for the session. (default: %(default)s)",
+        default="/processed_data"
     )
     parser.add_argument(
         "--results-path", "-R",
         type=str,
-        help="Where to write output result files. (default: %(default)s)",
+        help="Where to write output results for the session. (default: %(default)s)",
         default="/results"
+    )
+    parser.add_argument(
+        "--experimenter", "-e",
+        type=str,
+        help="Experimenter initials for the session being processed. (default: %(default)s)",
+        default="BH"
     )
     parser.add_argument(
         "--subject", "-s",
@@ -232,16 +240,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
 
     cli_args = parser.parse_args(argv)
-    data_path = Path(cli_args.data_path)
-    analysis_path = Path(cli_args.analysis_path)
+    raw_data_path = Path(cli_args.raw_data_path)
+    processed_data_path = Path(cli_args.processed_data_path)
     results_path = Path(cli_args.results_path)
     try:
         run_main(
+            cli_args.experimenter,
             cli_args.subject,
             cli_args.date,
             cli_args.session_info,
-            data_path,
-            analysis_path,
+            raw_data_path,
+            processed_data_path,
             results_path,
             cli_args.interneuron_search,
             cli_args.params_py_pattern,
