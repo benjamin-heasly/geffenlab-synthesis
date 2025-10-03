@@ -176,7 +176,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default=True
     )
     parser.add_argument(
-        "--params-py-pattern", "-P",
+        "--params-py-pattern", "-p",
         type=str,
         help="Glob pattern to locate Phy params.py within the session analysis subdir: ANALYSIS_ROOT/SUBJECT_ID/SESSION_DATE. (default: %(default)s)",
         default="exported/phy/*/params.py"
