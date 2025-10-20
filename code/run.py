@@ -27,7 +27,6 @@ def run_main(
     subject: str,
     date: str,
     session_info: str,
-    raw_data_path: Path,
     processed_data_path: Path,
     results_path: Path,
     interneuron_search: bool,
@@ -55,7 +54,7 @@ def run_main(
 
     # Load the lab dataframes from local files.
     trial_events, spikes_df, cluster_info, kept_clusters, nb_times = lf.gen_dataframe_local(
-        raw_data_path,
+        processed_data_path,
         neuronal_path,
         interneuron_search,
         behavior_txt_pattern,
@@ -127,12 +126,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     parser = ArgumentParser(description="Synthesize neural and behavioral data, produce summary plots.")
 
-    parser.add_argument(
-        "--raw-data-path", "-D",
-        type=str,
-        help="Where to find and read raw data files for the session. (default: %(default)s)",
-        default="/raw_data"
-    )
     parser.add_argument(
         "--processed-data-path", "-P",
         type=str,
@@ -240,7 +233,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
 
     cli_args = parser.parse_args(argv)
-    raw_data_path = Path(cli_args.raw_data_path)
     processed_data_path = Path(cli_args.processed_data_path)
     results_path = Path(cli_args.results_path)
     try:
@@ -249,7 +241,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             cli_args.subject,
             cli_args.date,
             cli_args.session_info,
-            raw_data_path,
             processed_data_path,
             results_path,
             cli_args.interneuron_search,
