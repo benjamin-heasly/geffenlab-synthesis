@@ -148,7 +148,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "--subject", "-s",
         type=str,
         help="Subject ID for the session being processed. (default: %(default)s)",
-        default="AS20-minimal2"
+        default="AS20-minimal3"
     )
     parser.add_argument(
         "--date", "-d",
